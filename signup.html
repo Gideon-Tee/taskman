@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Management System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <nav class="bg-teal-700 text-white p-2">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-2xl font-bold">TaskMan</h1>
+      <ul class="flex space-x-5">
+        <li><a href="login.html" class="hover:text-gray-300">Login</a></li>
+        <li><a href="index.html" class="hover:text-gray-300">Home</a></li>
+      </ul>
+    </div>
+  </nav>
+  <main class="flex justify-center items-center h-screen">
+    <form id="signupForm" class="bg-white p-8 rounded shadow-md w-96">
+      <h2 class="text-2xl font-bold mb-4 text-center">Signup</h2>
+      <!-- <input
+        type="text"
+        id="username"
+        placeholder="Username"
+        class="w-full mb-4 p-2 border rounded"
+        required
+      /> -->
+      <input
+        type="email"
+        id="username"
+        placeholder="Email"
+        class="w-full mb-4 p-2 border rounded"
+        required
+      />
+      <input
+        type="password"
+        id="password"
+        placeholder="Password"
+        class="w-full mb-4 p-2 border rounded"
+        required
+      />
+      <input
+        type="password"
+        id="password2"
+        placeholder="Confirm Password"
+        class="w-full mb-4 p-2 border rounded"
+        required
+      />
+      <button
+        type="submit"
+        class="w-full bg-teal-700 text-white py-2 rounded hover:bg-teal-800"
+      >
+        Signup
+      </button>
+      <p class="text-center text-sm mt-4">
+        Already have an account? <a href="login.html" class="text-teal-700">Login</a>
+      </p>
+    </form>
+  </main>
+
+
+
+
+  <script>
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const email = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const password2 = document.getElementById('password2').value;
+
+      if (password !== password2) {
+        alert("Passwords must match")
+        window.location.href = 'signup.html'
+      }
+      
+      const response = await fetch('https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/users/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password }),
+      });
+  
+      const result = await response.json();
+      if (response.ok) {
+        alert('Signup Successful');
+        localStorage.setItem('username', username)
+        window.location.href = 'confirm-email.html';
+      } else {
+        console.log(result)
+        alert(result.error || 'Signup Failed');
+      }
+    });
+  </script>
+  
+</body>
+</html>
