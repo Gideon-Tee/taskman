@@ -20,12 +20,16 @@ const tasksContainer = document.getElementById('mainContent');
 tasksContainer.innerHTML = '';
 tasks.forEach(task => {
     const taskCard = document.createElement('div');
-    taskCard.className = 'bg-white shadow p-4 rounded w-80 h-48 shrink-0 overflow-hidden'; // Fixed size
+    taskCard.className = 'bg-white shadow p-4 hover:shadow-lg rounded w-80 h-48 shrink-0 overflow-hidden'; // Fixed size
     taskCard.innerHTML = `
+    
     <h3 class="font-bold text-lg truncate">${task.title}</h3>
     <p class="text-sm text-gray-600">Status: ${task.status}</p>
     <p class="text-sm text-gray-600">Assigned to: ${task.assigned_to}</p>
     `;
+
+    taskCard.addEventListener('click', () => loadTaskDetails(task.task_id));
+
     tasksContainer.appendChild(taskCard);
 });
 }
@@ -181,3 +185,56 @@ document.getElementById('createTaskTab').addEventListener('click', () => {
 });
 
 
+
+// Function to fetch and display task details
+async function loadTaskDetails(taskId) {
+    const response = await fetch(`https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/tasks/${taskId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
+    });
+    const data = await response.json();
+
+    const tasksContainer = document.getElementById('mainContent');
+    tasksContainer.innerHTML = ''; // Clear the mainContent section
+
+    // Create a detailed view for the task
+    const taskDetails = document.createElement('div');
+    taskDetails.className = 'bg-white mt-6 shadow p-5 space-y-4 rounded w-full'; // Styling for detailed view
+    taskDetails.innerHTML = `
+        <h2 class="font-bold text-xl">${data.task.title}</h2>
+        <p class="text-gray-700">Description: ${data.task.description}</p>
+        <p class="text-gray-600">Status: ${data.task.status}</p>
+        <p class="text-gray-600">Assigned to: ${data.task.assigned_to}</p>
+        <p class="text-gray-600">Due Date: ${data.task.due_date}</p>
+        <div class="flex mt-6 justify-around">
+            <button class="hover:bg-teal-600 px-2 py-2 bg-teal-700 text-white text-sm rounded" onclick="">Update</button>
+            <button class="hover:bg-red-600 px-2 py-2 bg-red-700 text-white text-sm rounded" onclick="deleteTask('${data.task.task_id}')">Delete</button>
+        </div>
+    `;
+    
+    tasksContainer.appendChild(taskDetails);
+}
+
+
+async function deleteTask(taskId) {
+    const confirmation = confirm('Are you sure you want to delete this task?')
+    if (!confirmation) return;
+
+
+    try {
+        const response = await fetch(`https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/tasks/${taskId}`, {
+            method: "DELETE", headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
+        });
+
+        if (response.ok) {
+            alert('Task successfully deleted.');
+            fetchTasks();
+        } else {
+            const error = await response.json();
+            alert(`Failed to delete task: ${error.message || 'Unknown error'}`);
+        }
+        
+    } catch (error) {
+        console.error('Error deletingt task:', error);
+        alert('Could not delete task, an error occured.');
+    }
+}
