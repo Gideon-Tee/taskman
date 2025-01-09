@@ -210,7 +210,10 @@ async function loadTaskDetails(taskId) {
     const tasksContainer = document.getElementById('mainContent');
     tasksContainer.className = 'px-8 bg-white mt-6 shadow-lg px-4 py-6 rounded-lg';
     tasksContainer.innerHTML = `
-                <p class='text-2xl text-teal-700 my-6 text-bold'>${data.task.title}</p>
+                <div class="flex justify-between">
+                    <p class='text-xl text-teal-700 my-6 text-bold'>${data.task.title}</p>
+                    <button class="bg-teal-700 text-white text-sm rounded p-2" onclick="updateTask(${data.task.task_id})">Update</button>
+                </div>
                 `;
 
     // Create a detailed view for the task
@@ -283,7 +286,35 @@ async function deleteTask(taskId) {
         }
         
     } catch (error) {
-        console.error('Error deletingt task:', error);
+        console.error('Error deleting task:', error);
         alert('Could not delete task, an error occured.');
+    }
+}
+
+
+async function updateTask(taskId, updatedData) {
+    try {
+        const response = await fetch(`https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${localStorage.getItem('authToken')}`, // Use token from local storage
+            },
+            body: JSON.stringify(updatedData), // Send updated task data
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to update task.');
+        }
+
+        const data = await response.json();
+        alert('Task updated successfully!');
+        console.log(data);
+        
+        fetchTasks();
+    } catch (error) {
+        console.error('Error updating task:', error);
+        alert('An error occurred while updating the task.');
     }
 }
