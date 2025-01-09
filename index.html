@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Task Management System</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="navbar.js"></script>
   <style>
           /* Hide scrollbar but allow scrolling */
       .scrollbar-hidden::-webkit-scrollbar {
@@ -21,16 +22,18 @@
 <body class="bg-gray-100 min-h-screen">
   <nav class="bg-teal-700 text-white p-2">
     <div class="container mx-auto flex justify-between items-center">
-      <h1 class="text-2xl font-bold">TaskMan</h1>
+      <a href="index.html"><h1 class="text-2xl font-bold">TaskMan</h1></a>
       <ul class="flex space-x-5">
-        <li><a href="login.html" class="hover:text-gray-300">Login</a></li>
-        <li><a href="signup.html" class="hover:text-gray-300">Signup</a></li>
-        <li><a href="index.html" class="hover:text-gray-300">Home</a></li>
+        <li id="nav-item-login"><a href="login.html" class="hover:text-gray-300">Login</a></li>
+        <li id="nav-item-signup"><a href="signup.html" class="hover:text-gray-300">Sign up</a></li>
+        <li id="nav-item-home"><a href="index.html" class="hover:text-gray-300">Home</a></li>
+        <li id="nav-item-username"><a href="index.html" class="hover:text-gray-300"></a></li>
+        <li id="nav-item-logout"><a href="index.html" class="hover:text-red-800 font-light">Logout</a></li>
       </ul>
     </div>
   </nav>
   <main>
-    <div class="mx-auto w-2/3">
+    <div class="mx-auto w-2/3 pb-6">
       
       <section class="p-4 mt-8">
         <div class="tabs flex space-x-4">
@@ -43,7 +46,7 @@
 
       <div
           id="mainContent"
-          class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5 px-8"
+          class=""
           >
         <!-- Cards will be injected here -->
 

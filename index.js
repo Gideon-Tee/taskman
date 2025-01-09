@@ -8,30 +8,32 @@ if (!authToken) {
 })
 
 async function fetchTasks() {
-const response = await fetch('https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/tasks/', {
-    headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
-});
-const data = await response.json();
-const bodyData = JSON.parse(data.body);
-const tasks = bodyData.tasks || [];
+    const response = await fetch('https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/tasks/', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
+    });
+    const data = await response.json();
+    const bodyData = JSON.parse(data.body);
+    const tasks = bodyData.tasks || [];
 
 
-const tasksContainer = document.getElementById('mainContent');
-tasksContainer.innerHTML = '';
-tasks.forEach(task => {
-    const taskCard = document.createElement('div');
-    taskCard.className = 'bg-white shadow p-4 hover:shadow-lg rounded w-80 h-48 shrink-0 overflow-hidden'; // Fixed size
-    taskCard.innerHTML = `
-    
-    <h3 class="font-bold text-lg truncate">${task.title}</h3>
-    <p class="text-sm text-gray-600">Status: ${task.status}</p>
-    <p class="text-sm text-gray-600">Assigned to: ${task.assigned_to}</p>
-    `;
+    const tasksContainer = document.getElementById('mainContent');
+    tasksContainer.innerHTML = '';
+    tasksContainer.className = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5 px-2';
+    tasks.forEach(task => {
+        const taskCard = document.createElement('div');
+        taskCard.className = 'bg-white shadow p-4 hover:shadow-2xl rounded w-80 h-48 shrink-0 overflow-hidden'; // Fixed size
+        taskCard.innerHTML = `
+        
+        <h3 class="font-bold text-lg truncate">${task.title}</h3>
+        <p class="text-sm mt-4 text-gray-600">Status: ${task.status}</p>
+        <p class="text-sm text-gray-600">Assigned to: ${task.assigned_to}</p>
+        <p class="text-sm text-gray-600">Deadline: ${task.due_date}</p>
+        `;
 
-    taskCard.addEventListener('click', () => loadTaskDetails(task.task_id));
+        taskCard.addEventListener('click', () => loadTaskDetails(task.task_id));
 
-    tasksContainer.appendChild(taskCard);
-});
+        tasksContainer.appendChild(taskCard);
+    });
 }
 
 fetchTasks();
@@ -48,12 +50,13 @@ async function getTeamMembers() {
     const members = data.users || [];
 
     const tabContent = document.getElementById('mainContent');
+    tabContent.className = '';
     tabContent.innerHTML = '';
     members.forEach(member => {
         const memberCard = document.createElement('div');
-        memberCard.className = 'bg-white shadow p-4 rounded w-54 shrink-0';
+        memberCard.className = 'bg-white my-4 shadow p-4 hover:shadow-xl rounded w-54 shrink-0';
         memberCard.innerHTML = `
-        <h3 class="font-bold text-lg truncate">${member.attributes.email}</h3>
+        <h3 class="font-semibold text-lg truncate">${member.attributes.email}</h3>
         `;
         tabContent.appendChild(memberCard);
     })
@@ -65,11 +68,12 @@ document.getElementById('listTeamMembers').addEventListener('click', getTeamMemb
 document.getElementById('createTaskTab').addEventListener('click', () => {
     // Clear the main content
     const mainContent = document.getElementById('mainContent');
-    mainContent.innerHTML = '';
+    mainContent.className = 'w-2/3 mx-auto';
+    mainContent.innerHTML = '<p class="text-2xl text-center text-teal-700 font-light">Create New Task</p>';
 
     // Create the form
     const form = document.createElement('form');
-    form.className = 'flex flex-col gap-4 mt-12 pt-5 w-full mx-auto';
+    form.className = 'flex flex-col gap-4 mt-2 pt-5 w-full mx-auto';
 
     // Title input
     const titleInput = document.createElement('input');
@@ -77,7 +81,7 @@ document.getElementById('createTaskTab').addEventListener('click', () => {
     titleInput.name = 'title';
     titleInput.id = 'title';
     titleInput.placeholder = 'Task Title';
-    titleInput.className = 'border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400';
+    titleInput.className = 'border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500';
     form.appendChild(titleInput);
 
     // Description input
@@ -85,21 +89,36 @@ document.getElementById('createTaskTab').addEventListener('click', () => {
     descriptionInput.name = 'description';
     descriptionInput.id = 'description';
     descriptionInput.placeholder = 'Task Description';
-    descriptionInput.className = 'border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400';
+    descriptionInput.className = 'border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500';
     form.appendChild(descriptionInput);
 
 
-    // Assigned To dropdown
+    // Due Date label and input
+    const dueDateLabel = document.createElement('label');
+    dueDateLabel.textContent = 'Due Date:';
+    dueDateLabel.className = 'text-gray-700';
+    form.appendChild(dueDateLabel);
+
+    const dueDateInput = document.createElement('input');
+    dueDateInput.type = 'date';
+    dueDateInput.name = 'due_date';
+    dueDateInput.id = 'due_date';
+    dueDateInput.className = 'border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500';
+    form.appendChild(dueDateInput); // Append due_date input to the form
+
+
+
+        // Assigned To dropdown
     const assignedToLabel = document.createElement('label');
     assignedToLabel.textContent = 'Assign to:';
     assignedToLabel.className = 'text-gray-700';
     form.appendChild(assignedToLabel);
 
-
     const assignedToSelect = document.createElement('select');
     assignedToSelect.name = 'assigned_to';
     assignedToSelect.id = 'assigned_to';
-    assignedToSelect.className = 'border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400';
+    assignedToSelect.className = 'border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500';
+    form.appendChild(assignedToSelect); // Append dropdown to form before populating it
 
     // Fetch team members and populate dropdown
     async function fetchMembersAndPopulateDropdown() {
@@ -111,13 +130,11 @@ document.getElementById('createTaskTab').addEventListener('click', () => {
                     Authorization: `Bearer ${localStorage.getItem('authToken')}`,
                 },
             });
-    
+
             if (response.ok) {
                 const data = await response.json();
-                console.log(data);
-                
                 const members = data.users || []; 
-    
+
                 // Populate the dropdown
                 members.forEach((member) => {
                     const option = document.createElement('option');
@@ -132,20 +149,16 @@ document.getElementById('createTaskTab').addEventListener('click', () => {
             console.error('Error fetching team members:', error);
             alert('Error fetching team members.');
         }
-    
-        form.appendChild(assignedToSelect);
     }
-    
 
     fetchMembersAndPopulateDropdown();
-
 
     // Submit button
     const submitButton = document.createElement('button');
     submitButton.type = 'submit';
     submitButton.textContent = 'Create Task';
     submitButton.className = 'bg-teal-700 text-white py-2 px-4 rounded hover:bg-teal-500';
-    form.appendChild(submitButton);
+    form.appendChild(submitButton); // Append submit button after the dropdown
 
     // Handle form submission
     form.addEventListener('submit', async (e) => {
@@ -155,6 +168,7 @@ document.getElementById('createTaskTab').addEventListener('click', () => {
             title: document.getElementById('title').value,
             description: document.getElementById('description').value,
             assigned_to: document.getElementById('assigned_to').value,
+            "due_date": document.getElementById('due_date').value,
             "user_id": "gideon@777",
         };
 
@@ -194,25 +208,60 @@ async function loadTaskDetails(taskId) {
     const data = await response.json();
 
     const tasksContainer = document.getElementById('mainContent');
-    tasksContainer.innerHTML = ''; // Clear the mainContent section
+    tasksContainer.className = 'px-8 bg-white mt-6 shadow-lg px-4 py-6 rounded-lg';
+    tasksContainer.innerHTML = `
+                <p class='text-2xl text-teal-700 my-6 text-bold'>${data.task.title}</p>
+                `;
 
     // Create a detailed view for the task
-    const taskDetails = document.createElement('div');
-    taskDetails.className = 'bg-white mt-6 shadow p-5 space-y-4 rounded w-full'; // Styling for detailed view
-    taskDetails.innerHTML = `
-        <h2 class="font-bold text-xl">${data.task.title}</h2>
-        <p class="text-gray-700">Description: ${data.task.description}</p>
-        <p class="text-gray-600">Status: ${data.task.status}</p>
-        <p class="text-gray-600">Assigned to: ${data.task.assigned_to}</p>
-        <p class="text-gray-600">Due Date: ${data.task.due_date}</p>
-        <div class="flex mt-6 justify-around">
-            <button class="hover:bg-teal-600 px-2 py-2 bg-teal-700 text-white text-sm rounded" onclick="">Update</button>
-            <button class="hover:bg-red-600 px-2 py-2 bg-red-700 text-white text-sm rounded" onclick="deleteTask('${data.task.task_id}')">Delete</button>
-        </div>
-    `;
-    
-    tasksContainer.appendChild(taskDetails);
+    const table = document.createElement('table');
+    table.className = 'table-auto border-collapse border border-gray-300 w-full';
+
+    // Header Row
+    const headerRow = document.createElement('tr');
+    headerRow.className = 'border border-gray-300 bg-gray-100';
+
+    const taskDetailsHeaders = [
+        'Title',
+        'Description',
+        'Status',
+        'Assigned To',
+        'Created At',
+        'Due Date',
+    ];
+
+    taskDetailsHeaders.forEach((header) => {
+        const headerCell = document.createElement('th');
+        headerCell.className = 'px-4 py-2 font-bold text-teal-700 text-left';
+        headerCell.textContent = header;
+        headerRow.appendChild(headerCell);
+    });
+    table.appendChild(headerRow);
+
+    // Detail Row
+    const detailRow = document.createElement('tr');
+    detailRow.className = 'border border-gray-300';
+
+    const taskDetailsData = [
+        data.task.title || 'N/A',
+        data.task.description || 'N/A',
+        data.task.status || 'N/A',
+        data.task.assigned_to || 'N/A',
+        new Date(data.task.created_at).toLocaleDateString() || 'N/A',
+        new Date(data.task.due_date).toLocaleDateString() || 'N/A',
+    ];
+    console.log(data.task.due_date);
+    taskDetailsData.forEach((detail) => {
+        const detailCell = document.createElement('td');
+        detailCell.className = 'px-4 py-2 text-gray-600';
+        detailCell.textContent = detail;
+        detailRow.appendChild(detailCell);
+    });
+    table.appendChild(detailRow);
+
+    tasksContainer.appendChild(table);
 }
+
 
 
 async function deleteTask(taskId) {
