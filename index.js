@@ -65,11 +65,11 @@ async function getTeamMembers() {
 document.getElementById('listTeamMembers').addEventListener('click', getTeamMembers)
 
 
-document.getElementById('createTaskTab').addEventListener('click', () => {
+async function loadTaskForm(taskId) {
     // Clear the main content
     const mainContent = document.getElementById('mainContent');
     mainContent.className = 'w-2/3 mx-auto';
-    mainContent.innerHTML = '<p class="text-2xl text-center text-teal-700 font-light">Create New Task</p>';
+    mainContent.innerHTML = `<p class="text-2xl text-center text-teal-700 font-light">${taskId ? 'Update Task' : 'Create New Task'}</p>`;
 
     // Create the form
     const form = document.createElement('form');
@@ -92,8 +92,7 @@ document.getElementById('createTaskTab').addEventListener('click', () => {
     descriptionInput.className = 'border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500';
     form.appendChild(descriptionInput);
 
-
-    // Due Date label and input
+    // Due Date input
     const dueDateLabel = document.createElement('label');
     dueDateLabel.textContent = 'Due Date:';
     dueDateLabel.className = 'text-gray-700';
@@ -104,11 +103,29 @@ document.getElementById('createTaskTab').addEventListener('click', () => {
     dueDateInput.name = 'due_date';
     dueDateInput.id = 'due_date';
     dueDateInput.className = 'border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500';
-    form.appendChild(dueDateInput); // Append due_date input to the form
+    form.appendChild(dueDateInput);
 
+    // Status dropdown
+    const statusLabel = document.createElement('label');
+    statusLabel.textContent = 'Status:';
+    statusLabel.className = 'text-gray-700';
+    form.appendChild(statusLabel);
 
+    const statusSelect = document.createElement('select');
+    statusSelect.name = 'status';
+    statusSelect.id = 'status';
+    statusSelect.className = 'border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500';
 
-        // Assigned To dropdown
+    const statusOptions = ['Assigned', 'Completed', 'In-Progress'];
+    statusOptions.forEach((status) => {
+        const option = document.createElement('option');
+        option.value = status;
+        option.textContent = status;
+        statusSelect.appendChild(option);
+    });
+    form.appendChild(statusSelect);
+
+    // Assigned To dropdown
     const assignedToLabel = document.createElement('label');
     assignedToLabel.textContent = 'Assign to:';
     assignedToLabel.className = 'text-gray-700';
@@ -118,7 +135,7 @@ document.getElementById('createTaskTab').addEventListener('click', () => {
     assignedToSelect.name = 'assigned_to';
     assignedToSelect.id = 'assigned_to';
     assignedToSelect.className = 'border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500';
-    form.appendChild(assignedToSelect); // Append dropdown to form before populating it
+    form.appendChild(assignedToSelect);
 
     // Fetch team members and populate dropdown
     async function fetchMembersAndPopulateDropdown() {
@@ -133,13 +150,12 @@ document.getElementById('createTaskTab').addEventListener('click', () => {
 
             if (response.ok) {
                 const data = await response.json();
-                const members = data.users || []; 
+                const members = data.users || [];
 
-                // Populate the dropdown
                 members.forEach((member) => {
                     const option = document.createElement('option');
-                    option.value = member.attributes.email; // Replace with the actual field for the username
-                    option.textContent = member.attributes.email; // Replace with the actual field for display name
+                    option.value = member.attributes.email;
+                    option.textContent = member.attributes.email;
                     assignedToSelect.appendChild(option);
                 });
             } else {
@@ -151,30 +167,59 @@ document.getElementById('createTaskTab').addEventListener('click', () => {
         }
     }
 
-    fetchMembersAndPopulateDropdown();
+    await fetchMembersAndPopulateDropdown();
+
+    if (taskId) {
+        // Fetch the task details and populate the form
+        console.log(taskId);
+        
+        try {
+            const response = await fetch(`https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/tasks/${taskId}`, {
+                method: "GET", headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
+            });
+
+            if (response.ok) {
+                const { task } = await response.json();
+                titleInput.value = task.title;
+                descriptionInput.value = task.description;
+                dueDateInput.value = task.due_date.split('T')[0]; // Format to yyyy-MM-dd
+                assignedToSelect.value = task.assigned_to;
+            } else {
+                alert('Failed to fetch task details.');
+            }
+        } catch (error) {
+            console.error('Error fetching task details:', error);
+        }
+    }
 
     // Submit button
     const submitButton = document.createElement('button');
     submitButton.type = 'submit';
-    submitButton.textContent = 'Create Task';
+    submitButton.textContent = taskId ? 'Update Task' : 'Create Task';
     submitButton.className = 'bg-teal-700 text-white py-2 px-4 rounded hover:bg-teal-500';
-    form.appendChild(submitButton); // Append submit button after the dropdown
+    form.appendChild(submitButton);
 
     // Handle form submission
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const taskData = {
-            title: document.getElementById('title').value,
-            description: document.getElementById('description').value,
-            assigned_to: document.getElementById('assigned_to').value,
-            "due_date": document.getElementById('due_date').value,
-            "user_id": "gideon@777",
+            title: titleInput.value,
+            description: descriptionInput.value,
+            assigned_to: assignedToSelect.value,
+            status: statusSelect.value,
+            due_date: dueDateInput.value,
         };
 
+        const url = taskId
+            ? `https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/tasks/${taskId}`
+            : 'https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/tasks';
+
+        const method = taskId ? 'PUT' : 'POST';
+
         try {
-            const response = await fetch('https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/tasks', {
-                method: 'POST',
+            const response = await fetch(url, {
+                method,
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${localStorage.getItem('authToken')}`,
@@ -183,11 +228,11 @@ document.getElementById('createTaskTab').addEventListener('click', () => {
             });
 
             if (response.ok) {
-                alert('Task created successfully!');
-                window.location.href='index.html'
+                alert(taskId ? 'Task updated successfully!' : 'Task created successfully!');
+                window.location.href = 'index.html';
             } else {
                 const error = await response.json();
-                alert(`Failed to create task: ${error.message || 'Unknown error'}`);
+                alert(`Failed to ${taskId ? 'update' : 'create'} task: ${error.message || 'Unknown error'}`);
             }
         } catch (error) {
             alert(`Error: ${error.message}`);
@@ -196,8 +241,9 @@ document.getElementById('createTaskTab').addEventListener('click', () => {
 
     // Append the form to the main content
     mainContent.appendChild(form);
-});
+}
 
+document.getElementById('createTaskTab').addEventListener('click', () => loadTaskForm(null)); // For create
 
 
 // Function to fetch and display task details
@@ -212,9 +258,11 @@ async function loadTaskDetails(taskId) {
     tasksContainer.innerHTML = `
                 <div class="flex justify-between">
                     <p class='text-xl text-teal-700 my-6 text-bold'>${data.task.title}</p>
-                    <button class="bg-teal-700 text-white text-sm rounded p-2" onclick="updateTask(${data.task.task_id})">Update</button>
+                    <button id='updateTaskButton' class="bg-teal-700 text-white text-sm rounded p-2">Update</button>
                 </div>
                 `;
+
+    document.getElementById('updateTaskButton').addEventListener('click', () => loadTaskForm(data.task.task_id));
 
     // Create a detailed view for the task
     const table = document.createElement('table');
@@ -267,6 +315,7 @@ async function loadTaskDetails(taskId) {
 
 
 
+
 async function deleteTask(taskId) {
     const confirmation = confirm('Are you sure you want to delete this task?')
     if (!confirmation) return;
@@ -288,33 +337,5 @@ async function deleteTask(taskId) {
     } catch (error) {
         console.error('Error deleting task:', error);
         alert('Could not delete task, an error occured.');
-    }
-}
-
-
-async function updateTask(taskId, updatedData) {
-    try {
-        const response = await fetch(`https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/tasks/${taskId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${localStorage.getItem('authToken')}`, // Use token from local storage
-            },
-            body: JSON.stringify(updatedData), // Send updated task data
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to update task.');
-        }
-
-        const data = await response.json();
-        alert('Task updated successfully!');
-        console.log(data);
-        
-        fetchTasks();
-    } catch (error) {
-        console.error('Error updating task:', error);
-        alert('An error occurred while updating the task.');
     }
 }
