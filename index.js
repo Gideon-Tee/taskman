@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 const authToken = localStorage.getItem('authToken');
+const userGroup = localStorage.getItem('userGroup');
 
 if (!authToken) {
     // Redirect to the login page if the user is not authenticated
@@ -7,34 +8,64 @@ if (!authToken) {
 }
 })
 
-async function fetchTasks() {
-    const response = await fetch('https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/tasks/', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
-    });
-    const data = await response.json();
-    const bodyData = JSON.parse(data.body);
-    const tasks = bodyData.tasks || [];
-
-
-    const tasksContainer = document.getElementById('mainContent');
-    tasksContainer.innerHTML = '';
-    tasksContainer.className = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5 px-2';
-    tasks.forEach(task => {
-        const taskCard = document.createElement('div');
-        taskCard.className = 'bg-white shadow p-4 hover:shadow-2xl rounded w-80 h-48 shrink-0 overflow-hidden'; // Fixed size
-        taskCard.innerHTML = `
-        
-        <h3 class="font-bold text-lg truncate">${task.title}</h3>
-        <p class="text-sm mt-4 text-gray-600">Status: ${task.status}</p>
-        <p class="text-sm text-gray-600">Assigned to: ${task.assigned_to}</p>
-        <p class="text-sm text-gray-600">Deadline: ${task.due_date}</p>
-        `;
-
-        taskCard.addEventListener('click', () => loadTaskDetails(task.task_id));
-
-        tasksContainer.appendChild(taskCard);
-    });
+if (userGroup == 'TeamMember') {
+    document.getElementById('createTaskTab').style.display = 'none';
+    document.getElementById('listTasks').textContent = 'My Tasks';
 }
+
+
+
+
+async function fetchTasks() {
+    const userGroup = localStorage.getItem('userGroup'); // Retrieve the user group from localStorage
+
+    // Define the URL to fetch tasks
+    let url = 'https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/tasks/';
+
+    // If the user is a TeamMember, add a query parameter to filter tasks assigned to the user
+    if (userGroup === 'TeamMember') {
+        const username = localStorage.getItem('username'); // the username is stored in localStorage after login
+        url += `?assigned_to=${username}`;
+        
+    }
+
+    try {
+        const response = await fetch(url, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch tasks');
+        }
+
+        const data = await response.json();
+        const tasks = data.tasks;
+        
+
+        const tasksContainer = document.getElementById('mainContent');
+        tasksContainer.innerHTML = '';
+        tasksContainer.className = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5 px-2';
+
+        tasks.forEach(task => {
+            const taskCard = document.createElement('div');
+            taskCard.className = 'bg-white shadow p-4 hover:shadow-2xl rounded w-80 h-48 shrink-0 overflow-hidden'; // Fixed size
+            taskCard.innerHTML = `
+                <h3 class="font-bold text-lg truncate">${task.title}</h3>
+                <p class="text-sm mt-4 text-gray-600">Status: ${task.status}</p>
+                <p class="text-sm text-gray-600">Assigned to: ${task.assigned_to}</p>
+                <p class="text-sm text-gray-600">Deadline: ${task.due_date}</p>
+            `;
+
+            taskCard.addEventListener('click', () => loadTaskDetails(task.task_id));
+
+            tasksContainer.appendChild(taskCard);
+        });
+    } catch (error) {
+        console.error(error);
+        alert('An error occurred while fetching tasks.');
+    }
+}
+
 
 fetchTasks();
 
@@ -66,6 +97,7 @@ document.getElementById('listTeamMembers').addEventListener('click', getTeamMemb
 
 
 async function loadTaskForm(taskId) {
+    const userGroup = localStorage.getItem('userGroup');
     // Clear the main content
     const mainContent = document.getElementById('mainContent');
     mainContent.className = 'w-2/3 mx-auto';
@@ -82,6 +114,7 @@ async function loadTaskForm(taskId) {
     titleInput.id = 'title';
     titleInput.placeholder = 'Task Title';
     titleInput.className = 'border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500';
+    titleInput.readOnly = userGroup == "TeamMember"? true:false;
     form.appendChild(titleInput);
 
     // Description input
@@ -89,6 +122,7 @@ async function loadTaskForm(taskId) {
     descriptionInput.name = 'description';
     descriptionInput.id = 'description';
     descriptionInput.placeholder = 'Task Description';
+    descriptionInput.readOnly = userGroup == "TeamMember"? true:false;
     descriptionInput.className = 'border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500';
     form.appendChild(descriptionInput);
 
@@ -103,6 +137,7 @@ async function loadTaskForm(taskId) {
     dueDateInput.name = 'due_date';
     dueDateInput.id = 'due_date';
     dueDateInput.className = 'border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500';
+    dueDateInput.readOnly = userGroup == 'TeamMember'? true:false;
     form.appendChild(dueDateInput);
 
     // Status dropdown
@@ -167,7 +202,10 @@ async function loadTaskForm(taskId) {
         }
     }
 
-    await fetchMembersAndPopulateDropdown();
+    if (userGroup == 'Admin') {
+        await fetchMembersAndPopulateDropdown();
+
+    }
 
     if (taskId) {
         // Fetch the task details and populate the form
@@ -248,6 +286,7 @@ document.getElementById('createTaskTab').addEventListener('click', () => loadTas
 
 // Function to fetch and display task details
 async function loadTaskDetails(taskId) {
+    userGroup = localStorage.getItem('userGroup');
     const response = await fetch(`https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/tasks/${taskId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
     });
@@ -256,17 +295,15 @@ async function loadTaskDetails(taskId) {
     const tasksContainer = document.getElementById('mainContent');
     tasksContainer.className = 'px-8 bg-white mt-6 shadow-lg px-4 py-6 rounded-lg';
     tasksContainer.innerHTML = `
-                <div class="flex justify-between">
+                <div class="">
                     <p class='text-xl text-teal-700 my-6 text-bold'>${data.task.title}</p>
-                    <button id='updateTaskButton' class="bg-teal-700 text-white text-sm rounded p-2">Update</button>
                 </div>
                 `;
 
-    document.getElementById('updateTaskButton').addEventListener('click', () => loadTaskForm(data.task.task_id));
 
     // Create a detailed view for the task
     const table = document.createElement('table');
-    table.className = 'table-auto border-collapse border border-gray-300 w-full';
+    table.className = 'table-auto mb-6 border-collapse border border-gray-300 w-full';
 
     // Header Row
     const headerRow = document.createElement('tr');
@@ -311,6 +348,33 @@ async function loadTaskDetails(taskId) {
     table.appendChild(detailRow);
 
     tasksContainer.appendChild(table);
+
+    // Create a container for the buttons
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'flex w-full justify-end mt-6 gap-4'; // Flexbox to align buttons horizontally
+
+    // Create the Update button
+    const updateButton = document.createElement('button');
+    updateButton.id = 'updateTaskButton';
+    updateButton.className = 'bg-teal-700 text-white text-sm rounded p-2';
+    updateButton.textContent = localStorage.getItem('userGroup') == 'Admin'? 'Update': 'Update Status';
+    updateButton.addEventListener('click', () => {
+        loadTaskForm(data.task.task_id); // Call the update form function
+    });
+
+    // Create the Delete button
+    const deleteButton = document.createElement('button');
+    deleteButton.id = 'deleteTaskButton';
+    deleteButton.className = 'bg-red-700 ml-6 text-white text-sm rounded p-2';
+    deleteButton.textContent = 'Delete';
+    deleteButton.addEventListener('click', () => {deleteTask(data.task.task_id)});
+
+    tasksContainer.appendChild(updateButton);
+    if (userGroup == 'Admin') {
+        tasksContainer.appendChild(deleteButton);
+        
+    }
+
 }
 
 

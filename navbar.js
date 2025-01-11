@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (confirmation) {
             localStorage.removeItem('authToken');
+            localStorage.removeItem('userGroup');
             window.location.href='login.html';
 
         } else {return;}

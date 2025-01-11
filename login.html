@@ -78,6 +78,11 @@
         if (response.ok) {
           // Store the access token in localStorage
           localStorage.setItem('authToken', result.accessToken);
+
+          // Store the user group in localStorage as a string
+          const userGroups = result.userGroups && result.userGroups.length > 0 ? result.userGroups[0] : '';
+          localStorage.setItem('userGroup', userGroups);
+          localStorage.setItem('username', username)
   
           // Notify the user and redirect to the home page
           console.log('Login successful')
