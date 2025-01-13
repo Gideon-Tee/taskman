@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 const authToken = localStorage.getItem('authToken');
-const userGroup = localStorage.getItem('userGroup');
 
 if (!authToken) {
     // Redirect to the login page if the user is not authenticated
@@ -8,7 +7,7 @@ if (!authToken) {
 }
 })
 
-if (userGroup == 'TeamMember') {
+if (localStorage.getItem('userGroup') == 'TeamMember') {
     document.getElementById('createTaskTab').style.display = 'none';
     document.getElementById('listTasks').textContent = 'My Tasks';
 }
