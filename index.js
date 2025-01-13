@@ -1,16 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
-const authToken = localStorage.getItem('authToken');
+    const authToken = localStorage.getItem('authToken');
 
-if (!authToken) {
-    // Redirect to the login page if the user is not authenticated
-    window.location.href = 'login.html';
-}
+    if (!authToken) {
+        // Redirect to the login page if the user is not authenticated
+        window.location.href = 'login.html';
+    }
+    if (localStorage.getItem('userGroup') == 'TeamMember') {
+        document.getElementById('createTaskTab').style.display = 'none';
+        document.getElementById('listTasks').textContent = 'My Tasks';
+    }
 })
 
-if (localStorage.getItem('userGroup') == 'TeamMember') {
-    document.getElementById('createTaskTab').style.display = 'none';
-    document.getElementById('listTasks').textContent = 'My Tasks';
-}
 
 
 
