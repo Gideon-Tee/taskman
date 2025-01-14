@@ -83,8 +83,9 @@
           const userGroups = result.userGroups && result.userGroups.length > 0 ? result.userGroups[0] : '';
           localStorage.setItem('userGroup', userGroups);
           localStorage.setItem('username', username)
-  
+          
           // Notify the user and redirect to the home page
+          
           console.log('Login successful')
           window.location.href = 'index.html';
         } else {

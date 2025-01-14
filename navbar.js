@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nav_login.innerHTML = '';
         const nav_signup = document.getElementById('nav-item-signup');
         nav_signup.innerHTML = '';
+        document.getElementById('nav-item-username').textContent = localStorage.getItem('username');
         
     } else {
         nav_logout.innerHTML = "";
