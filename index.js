@@ -34,7 +34,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const tasksContainer = document.getElementById('mainContent');
             tasksContainer.className = 'px-4'; // Add spacing
             tasksContainer.innerHTML = '';
-    
+            
+            if (tasks.length === 0) {
+                tasksContainer.innerHTML = `
+                    <p class="text-gray-500 text-center text-2xl">No tasks assigned to you :)</p>
+                `;
+                return;
+            }
             tasks.forEach(task => {
                 const statusColor =
                     task.status === 'Assigned' ? 'bg-blue-500' :
