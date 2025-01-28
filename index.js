@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
             tasks.forEach(task => {
                 const taskCard = document.createElement('div');
-                taskCard.className = 'bg-white shadow p-4 hover:shadow-2xl rounded w-80 h-48 shrink-0 overflow-hidden'; // Fixed size
+                taskCard.className = 'bg-white shadow p-4 hover:shadow-2xl cursor-pointer rounded w-80 h-48 shrink-0 overflow-hidden'; // Fixed size
                 taskCard.innerHTML = `
                     <h3 class="font-bold text-lg truncate">${task.title}</h3>
                     <p class="text-sm mt-4 text-gray-600">Status: ${task.status}</p>
@@ -66,26 +66,76 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('listTasks').addEventListener('click', fetchTasks);
     
     async function getTeamMembers() {
-        const response = await fetch('https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/team', {
-            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
-        });
-        const data = await response.json();
-        console.log(data);
-        
-        const members = data.users || [];
+        try {
+            const response = await fetch('https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/team', {
+                headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
+            });
     
-        const tabContent = document.getElementById('mainContent');
-        tabContent.className = '';
-        tabContent.innerHTML = '';
-        members.forEach(member => {
-            const memberCard = document.createElement('div');
-            memberCard.className = 'bg-white my-4 shadow p-4 hover:shadow-xl rounded w-54 shrink-0';
-            memberCard.innerHTML = `
-            <h3 class="font-semibold text-lg truncate">${member.attributes.email}</h3>
+            const data = await response.json();
+            console.log(data);
+    
+            const members = data.users || [];
+            const tabContent = document.getElementById('mainContent');
+            tabContent.className = 'space-y-6'; 
+            tabContent.innerHTML = ''; // Clear previous content
+    
+            members.forEach(member => {
+                // Create a card for each member
+                const memberCard = document.createElement('div');
+                memberCard.className = 'bg-white shadow-lg rounded-lg p-6 hover:shadow-xl';
+    
+                // Member email
+                const email = member.attributes.email || 'N/A';
+                const emailHeading = `<h3 class="text-lg font-cursive font-bold text-teal-800 mb-4">${email}</h3>`;
+    
+                // Task list
+                const tasks = member.tasks || []; // Ensure tasks exist
+                let taskListHTML = '';
+    
+                if (tasks.length > 0) {
+                    const taskHeading = `<h4 class="text-md font-semibold text-gray-700 mb-2">Assigned Tasks:</h4>`;
+                    const taskItems = tasks
+                        .map(task => {
+                            let statusColor = 'bg-yellow-500'; // Default for "Pending"
+                            if (task.status === 'Assigned') statusColor = 'bg-blue-500';
+                            if (task.status === 'Completed') statusColor = 'bg-green-500';
+    
+                            return `
+                            <li class="flex justify-between items-center bg-gray-100 text-gray-700 rounded-md px-4 py-2 border border-gray-200">
+                                <span>${task.title}</span>
+                                <span class="text-white text-xs font-semibold px-3 py-1 rounded ${statusColor}">
+                                    ${task.status}
+                                </span>
+                            </li>`;
+                        })
+                        .join('');
+    
+                    taskListHTML = `
+                        ${taskHeading}
+                        <ul class="space-y-2">${taskItems}</ul>
+                    `;
+                } else {
+                    taskListHTML = `<p class="text-gray-500 italic">No tasks assigned.</p>`;
+                }
+    
+                // Combine email and task list into card
+                memberCard.innerHTML = `
+                    ${emailHeading}
+                    ${taskListHTML}
+                `;
+    
+                // Append card to main content
+                tabContent.appendChild(memberCard);
+            });
+        } catch (error) {
+            console.error('Error fetching team members:', error);
+            const tabContent = document.getElementById('mainContent');
+            tabContent.innerHTML = `
+                <p class="text-red-500">Failed to load team members. Please try again later.</p>
             `;
-            tabContent.appendChild(memberCard);
-        })
+        }
     }
+    
     
     document.getElementById('listTeamMembers').addEventListener('click', getTeamMembers)
     
