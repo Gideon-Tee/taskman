@@ -12,15 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function fetchTasks() {
         const userGroup = localStorage.getItem('userGroup'); // Retrieve the user group from localStorage
-    
-        // Define the URL to fetch tasks
         let url = 'https://5m8co26l97.execute-api.eu-west-1.amazonaws.com/dev/tasks/';
     
-        // If the user is a TeamMember, add a query parameter to filter tasks assigned to the user
         if (userGroup === 'TeamMember') {
-            const username = localStorage.getItem('username'); // the username is stored in localStorage after login
+            const username = localStorage.getItem('username');
             url += `?assigned_to=${username}`;
-            
         }
     
         try {
@@ -34,24 +30,31 @@ document.addEventListener('DOMContentLoaded', () => {
     
             const data = await response.json();
             const tasks = data.tasks;
-            
     
             const tasksContainer = document.getElementById('mainContent');
+            tasksContainer.className = 'px-4'; // Add spacing
             tasksContainer.innerHTML = '';
-            tasksContainer.className = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5 px-2';
     
             tasks.forEach(task => {
+                const statusColor =
+                    task.status === 'Assigned' ? 'bg-blue-500' :
+                    task.status === 'Completed' ? 'bg-green-500' : 'bg-yellow-500';
+    
                 const taskCard = document.createElement('div');
-                taskCard.className = 'bg-white shadow p-4 hover:shadow-2xl cursor-pointer rounded w-80 h-48 shrink-0 overflow-hidden'; // Fixed size
+                taskCard.className = 'bg-white my-4 cursor-pointer shadow p-4 hover:shadow-xl rounded-lg w-full';
+    
                 taskCard.innerHTML = `
-                    <h3 class="font-bold text-lg truncate">${task.title}</h3>
-                    <p class="text-sm mt-4 text-gray-600">Status: ${task.status}</p>
-                    <p class="text-sm text-gray-600">Assigned to: ${task.assigned_to}</p>
-                    <p class="text-sm text-gray-600">Deadline: ${task.due_date}</p>
+                    <h3 class="font-semibold text-lg text-gray-900">${task.title}</h3>
+                    <p class="mt-1 text-sm text-gray-600">Assigned to: <span class="font-medium text-gray-800">${task.assigned_to}</span></p>
+                    <p class="text-sm text-gray-600">Deadline: <span class="font-medium">${task.due_date || 'No deadline'}</span></p>
+                    <div class="flex justify-between items-center mt-3">
+                        <span class="text-sm font-medium text-gray-700">Status:</span>
+                        <span class="text-xs font-semibold text-white py-1 px-3 rounded-full ${statusColor}">${task.status}</span>
+                    </div>
                 `;
-    
+                
                 taskCard.addEventListener('click', () => loadTaskDetails(task.task_id));
-    
+
                 tasksContainer.appendChild(taskCard);
             });
         } catch (error) {
@@ -59,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('An error occurred while fetching tasks.');
         }
     }
+    
     
     
     fetchTasks();
